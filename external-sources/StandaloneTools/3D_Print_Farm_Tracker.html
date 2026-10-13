@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>3D Print Farm — Request Tracker</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f5f6f8;
+  --panel: #ffffff;
+  --border: #e2e5ea;
+  --text: #1c2128;
+  --muted: #6b7280;
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --primary-bg: #eff4ff;
+  --green: #16a34a;
+  --green-bg: #eafbf0;
+  --amber: #b45309;
+  --amber-bg: #fef6e7;
+  --red: #dc2626;
+  --red-bg: #fdecec;
+  --purple: #7c3aed;
+  --purple-bg: #f3edfe;
+  --radius: 10px;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+}
+.app { display: flex; height: 100vh; overflow: hidden; }
+
+/* Sidebar */
+.sidebar {
+  width: 320px;
+  flex-shrink: 0;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+.sidebar-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.farm-name-input {
+  width: 100%;
+  font-weight: 700;
+  font-size: 15px;
+  border: none;
+  background: transparent;
+  padding: 2px 0;
+  color: var(--text);
+}
+.farm-name-input:focus { outline: none; border-bottom: 1px solid var(--primary); }
+.sub-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.new-btn {
+  margin: 12px 16px 8px 16px;
+  padding: 10px 12px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 13.5px;
+}
+.new-btn:hover { background: var(--primary-dark); }
+.filter-row { padding: 0 16px 8px 16px; display: flex; gap: 6px; }
+.filter-row select, .search-input {
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12.5px;
+  background: #fff;
+  color: var(--text);
+}
+.job-list { overflow-y: auto; flex: 1; padding: 4px 8px 12px 8px; }
+.job-card {
+  padding: 10px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 4px;
+  border: 1px solid transparent;
+}
+.job-card:hover { background: #f7f8fa; }
+.job-card.active { background: var(--primary-bg); border-color: #c7d9fb; }
+.job-card-top { display: flex; justify-content: space-between; align-items: center; }
+.job-id { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 0.3px; }
+.job-part { font-weight: 600; font-size: 13.5px; margin: 2px 0; }
+.job-req { font-size: 12px; color: var(--muted); }
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.empty-state { padding: 30px 20px; text-align: center; color: var(--muted); font-size: 13px; }
+.sidebar-footer { padding: 10px 16px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
+.link-btn {
+  background: none; border: none; color: var(--primary); cursor: pointer;
+  font-size: 12.5px; padding: 4px 0; font-weight: 600; text-align: left;
+}
+.folder-status { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+.folder-status .dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; }
+.dot.on { background: var(--green); }
+.dot.off { background: #c9cdd3; }
+
+/* Main */
+.main { flex: 1; overflow-y: auto; padding: 28px 40px 60px 40px; }
+.main-inner { max-width: 780px; margin: 0 auto; }
+h1 { font-size: 20px; margin: 0 0 4px 0; }
+h2 { font-size: 15px; margin: 0 0 10px 0; }
+.page-sub { color: var(--muted); font-size: 13px; margin-bottom: 22px; }
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 22px;
+  margin-bottom: 18px;
+}
+.card-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field.full { grid-column: 1 / -1; }
+label { font-size: 12px; font-weight: 600; color: #374151; }
+input[type=text], input[type=email], input[type=tel], input[type=date], input[type=number], select, textarea {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-family: inherit;
+  background: #fff;
+  color: var(--text);
+  width: 100%;
+}
+textarea { resize: vertical; min-height: 60px; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-bg); }
+.hint { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.checkbox-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.checkbox-item { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.checkbox-item input { width: auto; }
+
+.btn { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: #fff; cursor: pointer; font-weight: 600; font-size: 13px; color: var(--text); }
+.btn:hover { background: #f7f8fa; }
+.btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-green { background: var(--green); color: #fff; border-color: var(--green); }
+.btn-green:hover { opacity: 0.9; }
+.btn-danger { color: var(--red); border-color: #f3c8c8; }
+.btn-danger:hover { background: var(--red-bg); }
+.btn-row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.status-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+.status-select { max-width: 220px; }
+
+.extract-box { display: flex; gap: 8px; align-items: flex-start; margin-top: 10px; }
+.extract-box textarea { flex: 1; }
+.ai-note { font-size: 11.5px; color: var(--muted); margin-top: 6px; }
+
+.photo-preview { max-width: 160px; max-height: 160px; border-radius: 8px; border: 1px solid var(--border); margin-top: 6px; display: block; }
+
+.banner {
+  background: var(--amber-bg); border: 1px solid #f3dfae; color: #7a4a06;
+  border-radius: 10px; padding: 10px 14px; font-size: 12.5px; margin-bottom: 18px;
+}
+
+/* Report overlay */
+#reportOverlay {
+  display: none;
+  position: fixed; inset: 0; background: rgba(20,22,26,0.55);
+  z-index: 50; align-items: flex-start; justify-content: center;
+  overflow-y: auto; padding: 30px 20px;
+}
+#reportOverlay.open { display: flex; }
+.report-sheet {
+  background: #fff; width: 720px; max-width: 100%;
+  border-radius: 10px; padding: 40px 44px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+}
+.report-toolbar { width: 720px; max-width: 100%; display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 10px; }
+.report-toolbar .btn { background: #fff; }
+
+.r-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #1c2128; padding-bottom: 12px; margin-bottom: 18px; }
+.r-farm { font-size: 19px; font-weight: 800; }
+.r-title { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+.r-jobid { text-align: right; font-size: 13px; }
+.r-jobid .id { font-weight: 800; font-size: 16px; }
+.r-section { margin-bottom: 16px; }
+.r-section h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 8px; }
+.r-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; font-size: 13px; }
+.r-grid div span.k { color: var(--muted); display: inline-block; min-width: 110px; }
+.r-photo-row { display: flex; gap: 20px; align-items: flex-start; }
+.r-photo-row img { width: 140px; height: 140px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+.r-signoff { margin-top: 26px; display: flex; gap: 40px; }
+.r-signoff div { flex: 1; border-top: 1px solid #1c2128; padding-top: 6px; font-size: 11.5px; color: var(--muted); }
+.r-footer { margin-top: 24px; font-size: 10.5px; color: var(--muted); text-align: center; }
+
+@media print {
+  body * { visibility: hidden; }
+  #reportOverlay, #reportOverlay * { visibility: visible; }
+  #reportOverlay { position: absolute; inset: 0; background: #fff; padding: 0; display: block !important; }
+  .report-toolbar { display: none !important; }
+  .report-sheet { box-shadow: none; width: 100%; margin: 0; }
+}
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: #1c2128; color: #fff; padding: 10px 18px; border-radius: 8px;
+  font-size: 13px; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <input class="farm-name-input" id="farmName" value="Your 3D Print Farm" />
+      <div class="sub-label">Request Tracker</div>
+    </div>
+    <button class="new-btn" onclick="showNewRequestForm()">+ New Request</button>
+    <div class="filter-row">
+      <select id="statusFilter" onchange="renderJobList()">
+        <option value="all">All statuses</option>
+        <option value="new">New</option>
+        <option value="instructions_ready">Instructions Ready</option>
+        <option value="printing">Printing</option>
+        <option value="qc">QC</option>
+        <option value="completed">Completed</option>
+        <option value="delivered">Delivered</option>
+        <option value="on_hold">On Hold</option>
+      </select>
+    </div>
+    <div class="filter-row" style="padding-top:0;">
+      <input class="search-input" id="searchBox" placeholder="Search jobs..." oninput="renderJobList()" />
+    </div>
+    <div class="job-list" id="jobList"></div>
+    <div class="sidebar-footer">
+      <div class="folder-status" id="folderStatus">
+        <span class="dot off"></span>Not saving to a folder
+      </div>
+      <button class="link-btn" id="folderBtn" onclick="chooseFolder()">📁 Connect data folder</button>
+      <button class="link-btn" onclick="exportCsv()">Export job log (CSV)</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="main-inner" id="mainContent"></div>
+  </div>
+</div>
+
+<div id="reportOverlay">
+  <div>
+    <div class="report-toolbar">
+      <button class="btn" onclick="closeReport()">Close</button>
+      <button class="btn btn-primary" onclick="window.print()">Print / Save PDF</button>
+    </div>
+    <div class="report-sheet" id="reportSheet"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------- Data layer (localStorage = working cache) ---------------- */
+const STORAGE_KEY = 'p3d_jobs_v1';
+const COUNTER_KEY = 'p3d_counter_v1';
+const FARM_KEY = 'p3d_farmname_v1';
+
+function loadJobs() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+  catch(e) { return []; }
+}
+function saveJobsLocal(list) { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
+function nextJobId() {
+  let n = parseInt(localStorage.getItem(COUNTER_KEY) || '0', 10) + 1;
+  localStorage.setItem(COUNTER_KEY, String(n));
+  return 'REQ-' + String(n).padStart(4, '0');
+}
+// Every mutation goes through saveJobs() so it's mirrored to the connected folder.
+function saveJobs(list) {
+  saveJobsLocal(list);
+  syncToDirectory();
+}
+
+let jobs = loadJobs();
+let activeJobId = null;
+let mode = jobs.length ? 'detail' : 'new'; // 'new' | 'detail'
+
+/* Farm name persistence */
+const farmInput = document.getElementById('farmName');
+farmInput.value = localStorage.getItem(FARM_KEY) || 'Your 3D Print Farm';
+farmInput.addEventListener('input', () => { localStorage.setItem(FARM_KEY, farmInput.value); syncToDirectory(); });
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+/* ---------------- Directory sync (File System Access API) ---------------- */
+const FS_SUPPORTED = typeof window.showDirectoryPicker === 'function';
+let dirHandle = null;
+
+// tiny IndexedDB wrapper to remember the chosen folder handle across reloads
+function idbOpen() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('p3d_fs_store', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('handles');
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbSet(key, val) {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('handles', 'readwrite');
+    tx.objectStore('handles').put(val, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function idbGet(key) {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('handles', 'readonly');
+    const req = tx.objectStore('handles').get(key);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function writeFile(handle, name, contents) {
+  const fileHandle = await handle.getFileHandle(name, { create: true });
+  const writable = await fileHandle.createWritable();
+  await writable.write(contents);
+  await writable.close();
+}
+async function readFileIfExists(handle, name) {
+  try {
+    const fileHandle = await handle.getFileHandle(name, { create: false });
+    const file = await fileHandle.getFile();
+    return await file.text();
+  } catch (e) { return null; }
+}
+
+function buildCsvString() {
+  const cols = ['id','status','createdAt','requester.name','requester.email','part.name','part.qtyRequested',
+    'instructions.material','instructions.color','instructions.printer','instructions.quantity','instructions.dueDate',
+    'production.qtyProduced','production.qcResult','production.completedDate'];
+  const get = (obj, path) => path.split('.').reduce((o,k) => (o||{})[k], obj);
+  const rows = [cols.join(',')].concat(jobs.map(j => cols.map(c => {
+    let v = get(j, c);
+    if (Array.isArray(v)) v = v.join('; ');
+    v = String(v ?? '').replace(/"/g, '""');
+    return `"${v}"`;
+  }).join(',')));
+  return rows.join('\n');
+}
+
+function renderFolderStatus() {
+  const el = document.getElementById('folderStatus');
+  const btn = document.getElementById('folderBtn');
+  if (!FS_SUPPORTED) {
+    el.innerHTML = '<span class="dot off"></span>Folder saving needs Chrome or Edge';
+    btn.style.display = 'none';
+    return;
+  }
+  if (dirHandle) {
+    el.innerHTML = `<span class="dot on"></span>Saving to "${escapeHtml(dirHandle.name)}"`;
+    btn.textContent = '📁 Change folder';
+  } else {
+    el.innerHTML = '<span class="dot off"></span>Not saving to a folder';
+    btn.textContent = '📁 Connect data folder';
+  }
+}
+
+let syncTimer = null;
+function syncToDirectory() {
+  if (!dirHandle) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(async () => {
+    try {
+      await writeFile(dirHandle, 'jobs.json', JSON.stringify(jobs, null, 2));
+      await writeFile(dirHandle, 'job_log.csv', buildCsvString());
+    } catch (e) {
+      console.warn('Folder sync failed', e);
+      toast('Could not write to folder — check permissions');
+    }
+  }, 300);
+}
+
+async function chooseFolder() {
+  if (!FS_SUPPORTED) { toast('Folder saving needs Chrome or Edge'); return; }
+  try {
+    const handle = await window.showDirectoryPicker();
+    const perm = await handle.requestPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') { toast('Permission denied'); return; }
+    dirHandle = handle;
+    await idbSet('dirHandle', handle);
+    await maybeLoadFromFolder();
+    await syncToDirectoryNow();
+    renderFolderStatus();
+    toast('Folder connected: ' + handle.name);
+  } catch (e) {
+    if (e.name !== 'AbortError') toast('Could not access that folder');
+  }
+}
+
+async function syncToDirectoryNow() {
+  if (!dirHandle) return;
+  await writeFile(dirHandle, 'jobs.json', JSON.stringify(jobs, null, 2));
+  await writeFile(dirHandle, 'job_log.csv', buildCsvString());
+}
+
+async function maybeLoadFromFolder() {
+  const existing = await readFileIfExists(dirHandle, 'jobs.json');
+  if (!existing) return;
+  try {
+    const folderJobs = JSON.parse(existing);
+    if (!Array.isArray(folderJobs) || !folderJobs.length) return;
+    if (!jobs.length) {
+      jobs = folderJobs;
+      saveJobsLocal(jobs);
+      renderJobList();
+      if (jobs.length) openJob(jobs[jobs.length - 1].id); else renderEmptyMain();
+    } else {
+      const loadIt = confirm(
+        'This folder already has ' + folderJobs.length + ' saved job(s).\n\n' +
+        'OK = load the folder\'s data (replaces what\'s currently shown)\n' +
+        'Cancel = keep current data and overwrite the folder with it'
+      );
+      if (loadIt) {
+        jobs = folderJobs;
+        saveJobsLocal(jobs);
+        renderJobList();
+        if (jobs.length) openJob(jobs[jobs.length - 1].id); else renderEmptyMain();
+      }
+    }
+  } catch (e) { /* ignore malformed file */ }
+}
+
+async function tryReconnectOnLoad() {
+  if (!FS_SUPPORTED) { renderFolderStatus(); return; }
+  try {
+    const handle = await idbGet('dirHandle');
+    if (!handle) { renderFolderStatus(); return; }
+    const perm = await handle.queryPermission({ mode: 'readwrite' });
+    if (perm === 'granted') {
+      dirHandle = handle;
+      await maybeLoadFromFolder();
+      renderFolderStatus();
+    } else {
+      // Needs a user gesture to re-grant — show a reconnect prompt instead of the full picker.
+      const el = document.getElementById('folderStatus');
+      el.innerHTML = '<span class="dot off"></span>Folder access needs to be re-granted';
+      const btn = document.getElementById('folderBtn');
+      btn.textContent = '📁 Reconnect "' + handle.name + '"';
+      btn.onclick = async () => {
+        const p = await handle.requestPermission({ mode: 'readwrite' });
+        if (p === 'granted') {
+          dirHandle = handle;
+          await maybeLoadFromFolder();
+          renderFolderStatus();
+          toast('Folder reconnected');
+        } else {
+          toast('Permission denied');
+        }
+      };
+    }
+  } catch (e) { renderFolderStatus(); }
+}
+
+/* ---------------- Status meta ---------------- */
+const STATUS_META = {
+  new:                { label: 'New',                color: 'var(--muted)',  bg: '#eef0f2' },
+  instructions_ready: { label: 'Instructions Ready',  color: 'var(--primary)',bg: 'var(--primary-bg)' },
+  printing:           { label: 'Printing',            color: 'var(--purple)', bg: 'var(--purple-bg)' },
+  qc:                 { label: 'QC',                  color: 'var(--amber)',  bg: 'var(--amber-bg)' },
+  completed:          { label: 'Completed',           color: 'var(--green)',  bg: 'var(--green-bg)' },
+  delivered:          { label: 'Delivered',           color: 'var(--green)',  bg: 'var(--green-bg)' },
+  on_hold:            { label: 'On Hold',              color: 'var(--red)',    bg: 'var(--red-bg)' },
+};
+
+/* ---------------- Sidebar / job list ---------------- */
+function renderJobList() {
+  const list = document.getElementById('jobList');
+  const filter = document.getElementById('statusFilter').value;
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  let filtered = jobs.filter(j => filter === 'all' || j.status === filter);
+  if (q) {
+    filtered = filtered.filter(j =>
+      (j.part.name || '').toLowerCase().includes(q) ||
+      (j.requester.name || '').toLowerCase().includes(q) ||
+      (j.id || '').toLowerCase().includes(q)
+    );
+  }
+  filtered.sort((a,b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty-state">No requests yet.<br>Click "+ New Request" to add one.</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(j => {
+    const meta = STATUS_META[j.status] || STATUS_META.new;
+    return `<div class="job-card ${j.id === activeJobId ? 'active' : ''}" onclick="openJob('${j.id}')">
+      <div class="job-card-top">
+        <span class="job-id">${j.id}</span>
+        <span class="badge" style="color:${meta.color}; background:${meta.bg}">${meta.label}</span>
+      </div>
+      <div class="job-part">${escapeHtml(j.part.name || '(untitled part)')}</div>
+      <div class="job-req">${escapeHtml(j.requester.name || 'Unknown requester')}${j.instructions.dueDate ? ' · Due ' + j.instructions.dueDate : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---------------- New Request form ---------------- */
+function showNewRequestForm() {
+  mode = 'new';
+  activeJobId = null;
+  renderJobList();
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `
+    <h1>New Request</h1>
+    <div class="page-sub">Paste the request email below, or fill in details after talking to the requester.</div>
+
+    <div class="card">
+      <div class="card-title-row"><h2>Paste request email (optional)</h2></div>
+      <div class="extract-box">
+        <textarea id="rawEmail" rows="6" placeholder="Paste the raw request email here..."></textarea>
+      </div>
+      <div class="ai-note">Paste it here for your own reference, then fill in the fields below after talking to the requester.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title-row"><h2>Requester</h2></div>
+      <div class="field-grid">
+        <div class="field"><label>Name</label><input type="text" id="reqName"></div>
+        <div class="field"><label>Email</label><input type="email" id="reqEmail"></div>
+        <div class="field"><label>Phone</label><input type="tel" id="reqPhone"></div>
+        <div class="field"><label>Department / Company</label><input type="text" id="reqDept"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title-row"><h2>Part / Request</h2></div>
+      <div class="field-grid">
+        <div class="field full"><label>Part name</label><input type="text" id="partName"></div>
+        <div class="field full"><label>Description / what they need</label><textarea id="partDesc" rows="3"></textarea></div>
+        <div class="field"><label>Quantity requested</label><input type="number" id="qtyRequested" min="1"></div>
+        <div class="field"><label>Requested by (date)</label><input type="date" id="dueDateInit"></div>
+        <div class="field full"><label>Notes from call with requester</label><textarea id="callNotes" rows="3" placeholder="What you clarified after talking to them..."></textarea></div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveNewRequest()">Save Request</button>
+      <button class="btn" onclick="cancelNew()">Cancel</button>
+    </div>
+  `;
+}
+
+function cancelNew() {
+  if (jobs.length) { openJob(jobs[jobs.length - 1].id); }
+  else { renderEmptyMain(); }
+}
+
+function saveNewRequest() {
+  const name = document.getElementById('partName').value.trim();
+  const reqName = document.getElementById('reqName').value.trim();
+  if (!name && !reqName) {
+    if (!confirm('No part name or requester name entered. Save anyway?')) return;
+  }
+  const job = {
+    id: nextJobId(),
+    createdAt: new Date().toISOString(),
+    status: 'new',
+    rawEmail: document.getElementById('rawEmail').value.trim(),
+    requester: {
+      name: reqName,
+      email: document.getElementById('reqEmail').value.trim(),
+      phone: document.getElementById('reqPhone').value.trim(),
+      department: document.getElementById('reqDept').value.trim(),
+    },
+    part: {
+      name: name,
+      description: document.getElementById('partDesc').value.trim(),
+      qtyRequested: document.getElementById('qtyRequested').value.trim(),
+      callNotes: document.getElementById('callNotes').value.trim(),
+    },
+    instructions: {
+      material: '', color: '', printer: '', layerHeight: '', infill: '',
+      nozzleTemp: '', priority: 'Normal', postProcessing: [], quantity: '',
+      dueDate: document.getElementById('dueDateInit').value || '', specialNotes: ''
+    },
+    production: {
+      qtyProduced: '', qcResult: '', qcNotes: '', completedBy: '', completedDate: '', photo: ''
+    }
+  };
+  jobs.push(job);
+  saveJobs(jobs);
+  toast('Request saved: ' + job.id);
+  openJob(job.id);
+}
+
+/* ---------------- Job detail ---------------- */
+const MATERIALS = ['PLA','PLA+','PETG','ABS','ASA','TPU (Flexible)','Nylon','PC (Polycarbonate)','Resin - Standard','Resin - Tough','Resin - Flexible','Other'];
+const LAYER_HEIGHTS = ['0.08mm (fine)','0.12mm','0.16mm','0.20mm (standard)','0.24mm','0.28mm','0.30mm (draft)'];
+const INFILLS = ['5%','10%','15%','20%','25%','30%','40%','50%','75%','100% (solid)'];
+const PRIORITIES = ['Low','Normal','High','Rush / Same-day'];
+const POST_PROCESS = ['Support removal','Sanding','Painting','Clear coat / sealing','Threaded inserts','Assembly','Drilling / tapping','Dye / tint (resin)','UV cure (resin)'];
+const QC_RESULTS = ['', 'Pass','Pass with notes','Fail - reprint','Fail - rework'];
+
+function getJob(id) { return jobs.find(j => j.id === id); }
+
+function openJob(id) {
+  mode = 'detail';
+  activeJobId = id;
+  renderJobList();
+  const job = getJob(id);
+  if (!job) { renderEmptyMain(); return; }
+  const main = document.getElementById('mainContent');
+  const ins = job.instructions, prod = job.production, req = job.requester, part = job.part;
+
+  main.innerHTML = `
+    <div class="status-row">
+      <h1 style="margin:0;">${job.id}</h1>
+      <select class="status-select" id="statusSelect" onchange="updateStatus('${job.id}', this.value)">
+        ${Object.keys(STATUS_META).map(k => `<option value="${k}" ${job.status===k?'selected':''}>${STATUS_META[k].label}</option>`).join('')}
+      </select>
+      <button class="btn btn-danger" style="margin-left:auto;" onclick="deleteJob('${job.id}')">Delete</button>
+    </div>
+    <div class="page-sub">Created ${new Date(job.createdAt).toLocaleDateString()} ${req.name ? '· Requested by ' + escapeHtml(req.name) : ''}</div>
+
+    <div class="card">
+      <div class="card-title-row"><h2>Requester & Part</h2><button class="link-btn" onclick="toggleEdit(this)">Edit</button></div>
+      <div id="reqPartView">
+        <div class="r-grid" style="margin-bottom:10px;">
+          <div><span class="k">Name</span>${escapeHtml(req.name)||'—'}</div>
+          <div><span class="k">Email</span>${escapeHtml(req.email)||'—'}</div>
+          <div><span class="k">Phone</span>${escapeHtml(req.phone)||'—'}</div>
+          <div><span class="k">Department</span>${escapeHtml(req.department)||'—'}</div>
+        </div>
+        <div style="margin-bottom:6px;"><b>${escapeHtml(part.name)||'(untitled part)'}</b></div>
+        <div style="color:var(--muted); margin-bottom:6px;">${escapeHtml(part.description)||'—'}</div>
+        ${part.callNotes ? `<div style="font-size:12.5px;"><b>Call notes:</b> ${escapeHtml(part.callNotes)}</div>` : ''}
+      </div>
+      <div id="reqPartEdit" style="display:none;">
+        <div class="field-grid">
+          <div class="field"><label>Name</label><input type="text" id="e_reqName" value="${escapeHtml(req.name)}"></div>
+          <div class="field"><label>Email</label><input type="email" id="e_reqEmail" value="${escapeHtml(req.email)}"></div>
+          <div class="field"><label>Phone</label><input type="tel" id="e_reqPhone" value="${escapeHtml(req.phone)}"></div>
+          <div class="field"><label>Department</label><input type="text" id="e_reqDept" value="${escapeHtml(req.department)}"></div>
+          <div class="field full"><label>Part name</label><input type="text" id="e_partName" value="${escapeHtml(part.name)}"></div>
+          <div class="field full"><label>Description</label><textarea id="e_partDesc" rows="3">${escapeHtml(part.description)}</textarea></div>
+          <div class="field full"><label>Call notes</label><textarea id="e_callNotes" rows="2">${escapeHtml(part.callNotes)}</textarea></div>
+        </div>
+        <div class="btn-row"><button class="btn btn-primary" onclick="saveReqPart('${job.id}')">Save</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title-row"><h2>Instructions for Team</h2></div>
+      <div class="field-grid">
+        <div class="field">
+          <label>Material</label>
+          <select id="i_material">
+            <option value="">Select...</option>
+            ${MATERIALS.map(m => `<option ${ins.material===m?'selected':''}>${m}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label>Color</label>
+          <input type="text" id="i_color" list="colorOptions" value="${escapeHtml(ins.color)}" placeholder="e.g. Black">
+          <datalist id="colorOptions">
+            <option value="Black"><option value="White"><option value="Gray"><option value="Red">
+            <option value="Blue"><option value="Green"><option value="Yellow"><option value="Orange">
+            <option value="Clear / Natural"><option value="Customer-supplied">
+          </datalist>
+        </div>
+        <div class="field">
+          <label>Printer / machine</label>
+          <input type="text" id="i_printer" list="printerOptions" value="${escapeHtml(ins.printer)}" placeholder="e.g. Printer 3">
+          <datalist id="printerOptions">
+            <option value="Printer 1"><option value="Printer 2"><option value="Printer 3"><option value="Resin Printer 1">
+          </datalist>
+        </div>
+        <div class="field">
+          <label>Quantity to produce</label>
+          <input type="number" id="i_quantity" min="1" value="${escapeHtml(ins.quantity)}">
+        </div>
+        <div class="field">
+          <label>Layer height</label>
+          <select id="i_layerHeight">
+            <option value="">Select...</option>
+            ${LAYER_HEIGHTS.map(l => `<option ${ins.layerHeight===l?'selected':''}>${l}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label>Infill</label>
+          <select id="i_infill">
+            <option value="">Select...</option>
+            ${INFILLS.map(v => `<option ${ins.infill===v?'selected':''}>${v}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label>Nozzle / cure temp</label>
+          <input type="text" id="i_nozzleTemp" value="${escapeHtml(ins.nozzleTemp)}" placeholder="e.g. 220°C">
+        </div>
+        <div class="field">
+          <label>Priority</label>
+          <select id="i_priority">
+            ${PRIORITIES.map(p => `<option ${ins.priority===p?'selected':''}>${p}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label>Due date</label>
+          <input type="date" id="i_dueDate" value="${escapeHtml(ins.dueDate)}">
+        </div>
+        <div class="field full">
+          <label>Post-processing</label>
+          <div class="checkbox-grid">
+            ${POST_PROCESS.map(p => `<label class="checkbox-item"><input type="checkbox" value="${p}" ${ins.postProcessing.includes(p)?'checked':''} class="ppCheck"> ${p}</label>`).join('')}
+          </div>
+        </div>
+        <div class="field full">
+          <label>Special requirements / tolerances</label>
+          <textarea id="i_specialNotes" rows="2">${escapeHtml(ins.specialNotes)}</textarea>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveInstructions('${job.id}')">Save Instructions</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title-row"><h2>Production & QC</h2></div>
+      <div class="field-grid">
+        <div class="field"><label>Quantity produced</label><input type="number" id="p_qtyProduced" min="0" value="${escapeHtml(prod.qtyProduced)}"></div>
+        <div class="field">
+          <label>QC result</label>
+          <select id="p_qcResult">
+            ${QC_RESULTS.map(r => `<option value="${r}" ${prod.qcResult===r?'selected':''}>${r || 'Select...'}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field full"><label>QC notes</label><textarea id="p_qcNotes" rows="2">${escapeHtml(prod.qcNotes)}</textarea></div>
+        <div class="field"><label>Completed by</label><input type="text" id="p_completedBy" value="${escapeHtml(prod.completedBy)}"></div>
+        <div class="field"><label>Completed date</label><input type="date" id="p_completedDate" value="${escapeHtml(prod.completedDate)}"></div>
+        <div class="field full">
+          <label>Photo of finished part</label>
+          <input type="file" id="p_photo" accept="image/*" onchange="handlePhoto('${job.id}', this)">
+          ${prod.photo ? `<img class="photo-preview" src="${prod.photo}">` : ''}
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveProduction('${job.id}')">Save Production Info</button>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-green" onclick="generateReport('${job.id}')">📄 Generate Traceability Report</button>
+    </div>
+  `;
+}
+
+function toggleEdit(btn) {
+  const view = document.getElementById('reqPartView');
+  const edit = document.getElementById('reqPartEdit');
+  const editing = edit.style.display !== 'none';
+  view.style.display = editing ? '' : 'none';
+  edit.style.display = editing ? 'none' : '';
+  btn.textContent = editing ? 'Edit' : 'Cancel';
+}
+
+function saveReqPart(id) {
+  const job = getJob(id);
+  job.requester = {
+    name: document.getElementById('e_reqName').value.trim(),
+    email: document.getElementById('e_reqEmail').value.trim(),
+    phone: document.getElementById('e_reqPhone').value.trim(),
+    department: document.getElementById('e_reqDept').value.trim(),
+  };
+  job.part.name = document.getElementById('e_partName').value.trim();
+  job.part.description = document.getElementById('e_partDesc').value.trim();
+  job.part.callNotes = document.getElementById('e_callNotes').value.trim();
+  saveJobs(jobs);
+  toast('Updated');
+  openJob(id);
+}
+
+function saveInstructions(id) {
+  const job = getJob(id);
+  job.instructions = {
+    material: document.getElementById('i_material').value,
+    color: document.getElementById('i_color').value.trim(),
+    printer: document.getElementById('i_printer').value.trim(),
+    layerHeight: document.getElementById('i_layerHeight').value,
+    infill: document.getElementById('i_infill').value,
+    nozzleTemp: document.getElementById('i_nozzleTemp').value.trim(),
+    priority: document.getElementById('i_priority').value,
+    quantity: document.getElementById('i_quantity').value,
+    dueDate: document.getElementById('i_dueDate').value,
+    postProcessing: Array.from(document.querySelectorAll('.ppCheck:checked')).map(c => c.value),
+    specialNotes: document.getElementById('i_specialNotes').value.trim(),
+  };
+  if (job.status === 'new') job.status = 'instructions_ready';
+  saveJobs(jobs);
+  toast('Instructions saved — job ready for team');
+  openJob(id);
+}
+
+function saveProduction(id) {
+  const job = getJob(id);
+  job.production.qtyProduced = document.getElementById('p_qtyProduced').value;
+  job.production.qcResult = document.getElementById('p_qcResult').value;
+  job.production.qcNotes = document.getElementById('p_qcNotes').value.trim();
+  job.production.completedBy = document.getElementById('p_completedBy').value.trim();
+  job.production.completedDate = document.getElementById('p_completedDate').value;
+  saveJobs(jobs);
+  toast('Production info saved');
+  openJob(id);
+}
+
+function handlePhoto(id, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const img = new Image();
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const maxDim = 500;
+      let w = img.width, h = img.height;
+      if (w > h && w > maxDim) { h = h * maxDim / w; w = maxDim; }
+      else if (h > maxDim) { w = w * maxDim / h; h = maxDim; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      const job = getJob(id);
+      job.production.photo = dataUrl;
+      saveJobs(jobs);
+      openJob(id);
+      toast('Photo attached');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function updateStatus(id, status) {
+  const job = getJob(id);
+  job.status = status;
+  saveJobs(jobs);
+  renderJobList();
+  toast('Status updated');
+}
+
+function deleteJob(id) {
+  if (!confirm('Delete this job permanently?')) return;
+  jobs = jobs.filter(j => j.id !== id);
+  saveJobs(jobs);
+  activeJobId = null;
+  toast('Job deleted');
+  if (jobs.length) openJob(jobs[jobs.length-1].id);
+  else { renderJobList(); renderEmptyMain(); }
+}
+
+/* ---------------- Traceability report ---------------- */
+function buildReportHtml(job, forFile) {
+  const ins = job.instructions, prod = job.production, req = job.requester, part = job.part;
+  const farm = farmInput.value || 'Your 3D Print Farm';
+  const meta = STATUS_META[job.status] || STATUS_META.new;
+
+  const body = `
+    <div class="r-header">
+      <div>
+        <div class="r-farm">${escapeHtml(farm)}</div>
+        <div class="r-title">Part Traceability Report</div>
+      </div>
+      <div class="r-jobid">
+        <div class="id">${job.id}</div>
+        <div>Status: ${meta.label}</div>
+        <div>${new Date().toLocaleDateString()}</div>
+      </div>
+    </div>
+
+    <div class="r-section">
+      <h3>Requester</h3>
+      <div class="r-grid">
+        <div><span class="k">Name</span>${escapeHtml(req.name)||'—'}</div>
+        <div><span class="k">Department</span>${escapeHtml(req.department)||'—'}</div>
+        <div><span class="k">Email</span>${escapeHtml(req.email)||'—'}</div>
+        <div><span class="k">Phone</span>${escapeHtml(req.phone)||'—'}</div>
+      </div>
+    </div>
+
+    <div class="r-section">
+      <h3>Part</h3>
+      <div style="font-weight:700; margin-bottom:4px;">${escapeHtml(part.name)||'—'}</div>
+      <div style="font-size:12.5px; color:var(--muted); margin-bottom:8px;">${escapeHtml(part.description)||'—'}</div>
+      <div class="r-grid">
+        <div><span class="k">Qty requested</span>${escapeHtml(part.qtyRequested)||'—'}</div>
+        <div><span class="k">Qty produced</span>${escapeHtml(prod.qtyProduced)||'—'}</div>
+      </div>
+    </div>
+
+    <div class="r-section">
+      <h3>Print Specifications</h3>
+      <div class="r-grid">
+        <div><span class="k">Material</span>${escapeHtml(ins.material)||'—'}</div>
+        <div><span class="k">Color</span>${escapeHtml(ins.color)||'—'}</div>
+        <div><span class="k">Printer</span>${escapeHtml(ins.printer)||'—'}</div>
+        <div><span class="k">Layer height</span>${escapeHtml(ins.layerHeight)||'—'}</div>
+        <div><span class="k">Infill</span>${escapeHtml(ins.infill)||'—'}</div>
+        <div><span class="k">Nozzle/cure temp</span>${escapeHtml(ins.nozzleTemp)||'—'}</div>
+        <div><span class="k">Post-processing</span>${ins.postProcessing.length ? escapeHtml(ins.postProcessing.join(', ')) : '—'}</div>
+        <div><span class="k">Special requirements</span>${escapeHtml(ins.specialNotes)||'—'}</div>
+      </div>
+    </div>
+
+    <div class="r-section">
+      <h3>Quality Check</h3>
+      <div class="r-photo-row">
+        <div class="r-grid" style="flex:1;">
+          <div><span class="k">QC result</span>${escapeHtml(prod.qcResult)||'—'}</div>
+          <div><span class="k">Completed by</span>${escapeHtml(prod.completedBy)||'—'}</div>
+          <div><span class="k">Completed date</span>${escapeHtml(prod.completedDate)||'—'}</div>
+          <div class="field full"><span class="k">QC notes</span>${escapeHtml(prod.qcNotes)||'—'}</div>
+        </div>
+        ${prod.photo ? `<img src="${prod.photo}">` : ''}
+      </div>
+    </div>
+
+    <div class="r-signoff">
+      <div>Prepared by (signature / date)</div>
+      <div>Received by requester (signature / date)</div>
+    </div>
+
+    <div class="r-footer">Generated by ${escapeHtml(farm)} Request Tracker · Job ${job.id} · ${new Date().toLocaleString()}</div>
+  `;
+
+  if (!forFile) return body;
+
+  // Self-contained standalone HTML file (openable/printable on its own, no app needed)
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(job.id)} — Traceability Report</title>
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#1c2128;background:#fff;margin:0;padding:40px 44px;max-width:720px;}
+    :root{--muted:#6b7280;--border:#e2e5ea;}
+    .r-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1c2128;padding-bottom:12px;margin-bottom:18px;}
+    .r-farm{font-size:19px;font-weight:800;}
+    .r-title{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;}
+    .r-jobid{text-align:right;font-size:13px;}
+    .r-jobid .id{font-weight:800;font-size:16px;}
+    .r-section{margin-bottom:16px;}
+    .r-section h3{font-size:11px;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:8px;}
+    .r-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;font-size:13px;}
+    .r-grid div span.k{color:var(--muted);display:inline-block;min-width:110px;}
+    .r-photo-row{display:flex;gap:20px;align-items:flex-start;}
+    .r-photo-row img{width:140px;height:140px;object-fit:cover;border-radius:8px;border:1px solid var(--border);}
+    .r-signoff{margin-top:26px;display:flex;gap:40px;}
+    .r-signoff div{flex:1;border-top:1px solid #1c2128;padding-top:6px;font-size:11.5px;color:var(--muted);}
+    .r-footer{margin-top:24px;font-size:10.5px;color:var(--muted);text-align:center;}
+  </style></head><body>${body}</body></html>`;
+}
+
+async function generateReport(id) {
+  const job = getJob(id);
+  document.getElementById('reportSheet').innerHTML = buildReportHtml(job, false);
+  document.getElementById('reportOverlay').classList.add('open');
+
+  if (dirHandle) {
+    try {
+      let reportsDir = await dirHandle.getDirectoryHandle('reports', { create: true });
+      await writeFile(reportsDir, job.id + '.html', buildReportHtml(job, true));
+      toast('Report saved to reports/' + job.id + '.html');
+    } catch (e) {
+      console.warn('Could not save report file', e);
+    }
+  }
+}
+function closeReport() { document.getElementById('reportOverlay').classList.remove('open'); }
+
+/* ---------------- CSV export (manual download, works in any browser) ---------------- */
+function exportCsv() {
+  if (!jobs.length) { toast('No jobs to export'); return; }
+  const blob = new Blob([buildCsvString()], {type: 'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'print_farm_jobs.csv';
+  a.click();
+}
+
+/* ---------------- Empty state ---------------- */
+function renderEmptyMain() {
+  document.getElementById('mainContent').innerHTML = `
+    <h1>3D Print Farm — Request Tracker</h1>
+    <div class="page-sub">Log requests, hand off clear instructions to your team, and generate a traceability report for each finished part.</div>
+    ${!FS_SUPPORTED ? `<div class="banner">Folder saving works in Chrome or Edge. In other browsers your data still saves in this tab — use "Export job log (CSV)" as a backup.</div>` : ''}
+    <div class="card">
+      <p>No requests yet. Click <b>+ New Request</b> in the sidebar to log your first one — paste the email or enter details after talking to the requester.</p>
+    </div>
+  `;
+}
+
+/* ---------------- Init ---------------- */
+renderJobList();
+if (mode === 'detail' && jobs.length) openJob(jobs[jobs.length-1].id);
+else showNewRequestForm();
+tryReconnectOnLoad();
+</script>
+</body>
+</html>

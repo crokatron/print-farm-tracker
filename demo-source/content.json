@@ -1,0 +1,64 @@
+{
+  "slug": "print-farm-tracker",
+  "title": "3D Print Farm Tracker",
+  "summary": "Track a print request from intake through production, quality checks and delivery. This browser tool records who asked for a part, the agreed printing instructions and the result, and can generate a traceability report. It does not slice models or launch printers.",
+  "features": [
+    [
+      "Intake",
+      "Requester, part, quantity, date, notes and an optional pasted request email.",
+      "Request lifecycle"
+    ],
+    [
+      "Team instructions",
+      "Material, colour, machine, layer height, infill, temperature, priority and finishing requirements.",
+      "Request lifecycle"
+    ],
+    [
+      "Status",
+      "New, Instructions Ready, Printing, QC, Completed, Delivered and On Hold.",
+      "Request lifecycle"
+    ],
+    [
+      "Production and QC",
+      "Produced quantity, pass/rework/reprint result, notes, operator/date and a finished-part photo.",
+      "Request lifecycle"
+    ],
+    [
+      "Reports",
+      "Generate a traceability report for print/PDF and export a CSV job log.",
+      "Request lifecycle"
+    ],
+    [
+      "Folder storage",
+      "Connect a data folder when browser support and permission allow it.",
+      "Request lifecycle"
+    ]
+  ],
+  "workflows": [
+    [
+      "Record a request",
+      [
+        "Choose + New Request. Enter the requester and part details, quantity and due date. Pasting an email keeps it as reference; fill the structured fields yourself.",
+        "Choose Save Request and note the REQ identifier. Use that identifier in team communications so similarly named parts are not confused.",
+        "Complete Instructions for Team, including machine, material, layer height and any tolerances/finishing. Save Instructions before changing status."
+      ]
+    ],
+    [
+      "Track production and quality",
+      [
+        "Move the request to Instructions Ready when instructions are agreed, then Printing when production actually begins. The status itself does not start a machine.",
+        "Record actual quantity produced, QC result, notes and who completed the work. Add a photo if appropriate and Save Production Info.",
+        "Use Fail - reprint or Fail - rework when that is the result. Do not mark Delivered merely because printing finished."
+      ]
+    ],
+    [
+      "Export and retain the job record",
+      [
+        "Generate Traceability Report and review requester, part, print specifications and QC information before Print / Save PDF.",
+        "Export the CSV job log for a summary across requests; the detailed report is a separate artifact.",
+        "Use Connect data folder if supported and confirm the saving status. The page explicitly says Not saving to a folder when no folder is connected."
+      ]
+    ]
+  ],
+  "limits": "The screenshot contains a fictional request. No real requester details were copied. This tracker is independent of Parts Bench and does not imply automatic printer communication."
+}

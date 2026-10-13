@@ -1,0 +1,75 @@
+[
+  {
+    "boxes": [
+      {
+        "h": 46,
+        "selector": "#statusSelect",
+        "text": "Move from New through production, QC and delivery as the work happens.",
+        "title": "Track the real stage",
+        "w": 228,
+        "x": 888.96875,
+        "y": 24
+      },
+      {
+        "h": 46,
+        "selector": "#i_material",
+        "text": "Choose material and save the agreed production settings below.",
+        "title": "Record print instructions",
+        "w": 367,
+        "x": 809,
+        "y": 404
+      },
+      {
+        "h": 32,
+        "selector": "#folderBtn",
+        "text": "Connect the intended folder and confirm the saving indicator.",
+        "title": "Check where records save",
+        "w": 295,
+        "x": 12,
+        "y": 1342
+      }
+    ],
+    "height": 1408,
+    "width": 2055,
+    "title": "Actual tool · controls at a glance",
+    "caption": "Actual application screenshot. Numbered boxes point to the controls described below. ",
+    "key": "print-farm"
+  },
+  {
+    "boxes": [
+      {
+        "h": 54,
+        "selector": "#part",
+        "text": "Keep a clear request identity and quantity.",
+        "title": "Name the requested part",
+        "w": 260,
+        "x": 318,
+        "y": 245.515625
+      },
+      {
+        "h": 52,
+        "selector": "#qc",
+        "text": "Status and quality result describe different things.",
+        "title": "Record the actual result",
+        "w": 260,
+        "x": 318,
+        "y": 613.515625
+      },
+      {
+        "h": 532.9375,
+        "selector": "#result",
+        "text": "The dummy request keeps your edits without launching a printer.",
+        "title": "Check the saved record",
+        "w": 517.078125,
+        "x": 1228.90625,
+        "y": 191.515625
+      }
+    ],
+    "height": 1408,
+    "width": 2055,
+    "key": "simulation",
+    "title": "Try the working offline example",
+    "caption": "Screenshot of this project’s interactive demo. Side-by-side services are explicitly simulated.",
+    "cropHeight": 765.453125
+  }
+]
