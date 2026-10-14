@@ -12,4 +12,4 @@ Tracks requests, quantities, instructions, print status and QC decisions. It is 
 
 **Next maintainer action:** Create a fictional request, change status/QC, save and reopen in the actual folder-backed mode. Confirm attachment recovery and reporting. Do not interpret a Printing status label as a machine command.
 
-**Status:** private upload verified on 14 October 2026. These guides accompany the private source package. Live runtime, data backups and full recovery were not retested. Public release needs separate approval.
+**Status:** private upload verified on 14 October 2026. These guides accompany the source package. Live runtime, data backups and full recovery were not retested. Public sharing was authorised on 14 October 2026; the NAS backup remains private.
