@@ -1,5 +1,7 @@
 # 3D Print Farm Tracker
 
+**Maintaining this project? [Start here](docs/START-HERE.md) · [Detailed handover](docs/HANDOVER.md)**
+
 Track a print request from intake through production, quality checks and delivery. This browser tool records who asked for a part, the agreed printing instructions and the result, and can generate a traceability report. It does not slice models or launch printers.
 
 **Private preview · not published.**
@@ -12,7 +14,7 @@ Download `demo.html` using GitHub’s Download raw file control, then open it in
 
 ### Actual tool · controls at a glance
 
-Actual application screenshot. Numbered boxes point to the controls described below. 
+Actual application screenshot. Numbered boxes point to the controls described below.
 
 ![3D Print Farm Tracker — numbered controls](docs/images/guide-1.jpg)
 
